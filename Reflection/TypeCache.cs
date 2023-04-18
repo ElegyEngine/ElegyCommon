@@ -1,7 +1,7 @@
 ﻿// SPDX-FileCopyrightText: 2022-2023 Admer Šuko
 // SPDX-License-Identifier: MIT
 
-// Stub, will work on it again mid April
+// Stub, will work on it again mid May
 
 using System;
 using System.Reflection;
