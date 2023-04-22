@@ -4,8 +4,7 @@
 namespace Elegy.Collections
 {
 	/// <summary>
-	/// N-dimensional spatial tree that stores <typeparamref name="TItem"/>s
-	/// inside a <typeparamref name="TBound"/>.
+	/// N-dimensional spatial tree (s-tree) that stores <typeparamref name="TItem"/>s inside a <typeparamref name="TBound"/>.
 	/// </summary>
 	/// <typeparam name="TBound">
 	/// For example: <seealso cref="Aabb"/> or <seealso cref="Rect2"/>.
@@ -13,42 +12,43 @@ namespace Elegy.Collections
 	/// <typeparam name="TItem">
 	/// For example: <seealso cref="Vector3"/> or anything, really!
 	/// </typeparam>
-	public class NTree<TBound, TItem> where TBound : struct
+	public class STree<TBound, TItem> where TBound : struct
 	{
 		#region Private fields
-		private int mDimensions;
-		private TBound mBound;
-		private List<TItem> mItems;
-		private List<NTreeNode<TBound, TItem>> mNodes;
-		private List<NTreeNode<TBound, TItem>> mLeaves;
+		protected int mDimensions;
+		protected TBound mBound;
+		protected List<TItem> mItems;
+		protected List<STreeNode<TBound, TItem>> mNodes = new();
+		protected List<STreeNode<TBound, TItem>> mLeaves = new();
 		#endregion
 
 		#region Delegates
 		/// <summary>
 		/// Does the item intersect the bound?
 		/// </summary>
-		public delegate bool IntersectsBoundDelegate( TItem item, TBound bound );
+		public delegate bool IsInBoundFn( in TItem item, in TBound bound );
 
 		/// <summary>
 		/// With these elements loaded, should this node subdivide any further?
 		/// </summary>
-		public delegate bool ShouldSubdivideDelegate( NTreeNode<TBound, TItem> node );
+		public delegate bool ShouldSubdivideFn( in STreeNode<TBound, TItem> node );
 
 		/// <summary>
 		/// Get a subdivided bounding volume for the Nth child node
 		/// </summary>
-		public delegate TBound GetSubdividedVolumeForChildDelegate( TBound bound, int childIndex );
+		public delegate TBound GetChildVolumeFn( in TBound bound, in int childIndex );
 
 		/// <summary>
-		/// If two or more intersections occur, resolve them. This gets called for any number of intersections actually.
+		/// If two or more intersections occur within the node's children, resolve them.
 		/// </summary>
 		/// <returns>True on successful resolution, false if there were no usable intersections at all.</returns>
-		public delegate bool ResolveIntersectionsDelegate( TBound[] bounds, TItem item, out int[] hits );
+		public delegate bool CollectIntersectionsFn( in STreeNode<TBound, TItem> parentNode, in TItem item, out int[] hits );
 		#endregion
 
 		#region Properties
 		/// <summary>
-		/// 
+		/// Usually **the** number of children that must be had.
+		/// Technically the max number of children that this node may have.
 		/// </summary>
 		public int Combinations => 1 << Dimensions;
 
@@ -70,35 +70,41 @@ namespace Elegy.Collections
 		/// <summary>
 		/// All of the nodes belonging to this tree.
 		/// </summary>
-		public IReadOnlyList<NTreeNode<TBound, TItem>> Nodes => mNodes;
+		public IReadOnlyList<STreeNode<TBound, TItem>> Nodes => mNodes;
 
 		/// <summary>
 		/// A subset of <c>Nodes</c> which are leaf nodes.
 		/// </summary>
-		public IReadOnlyList<NTreeNode<TBound, TItem>> Leaves => mLeaves;
+		public IReadOnlyList<STreeNode<TBound, TItem>> Leaves => mLeaves;
 
 		/// <summary>
-		/// See <see cref="IntersectsBoundDelegate"/>.
+		/// See <see cref="IsInBoundFn"/>.
 		/// </summary>
-		public IntersectsBoundDelegate IntersectsBound { get; set; }
+		public IsInBoundFn IsInBound { get; set; }
 
 		/// <summary>
-		/// See <see cref="ShouldSubdivideDelegate"/>.
+		/// See <see cref="ShouldSubdivideFn"/>.
 		/// </summary>
-		public ShouldSubdivideDelegate ShouldSubdivide { get; set; }
+		public ShouldSubdivideFn ShouldSubdivide { get; set; }
 
 		/// <summary>
-		/// See <see cref="GetSubdividedVolumeForChildDelegate"/>.
+		/// See <see cref="GetChildVolumeFn"/>.
 		/// </summary>
-		public GetSubdividedVolumeForChildDelegate GetSubdividedVolumeForChild { get; set; }
+		public GetChildVolumeFn GetChildVolume { get; set; }
 
 		/// <summary>
-		/// See <see cref="ResolveIntersectionsDelegate"/>.
+		/// See <see cref="CollectIntersectionsFn"/>.
 		/// </summary>
-		public ResolveIntersectionsDelegate ResolveIntersections { get; set; }
+		public CollectIntersectionsFn CollectIntersections { get; set; }
 		#endregion
 
-		public NTree( TBound rootBound, IReadOnlyList<TItem> items, int dimensions )
+		/// <summary>
+		/// The constructor for this thing.
+		/// </summary>
+		/// <param name="rootBound">The bounding volume of the root node.</param>
+		/// <param name="items"></param>
+		/// <param name="dimensions"></param>
+		public STree( TBound rootBound, IReadOnlyList<TItem> items, int dimensions )
 		{
 			mItems = items.ToList();
 			mBound = rootBound;
@@ -115,6 +121,10 @@ namespace Elegy.Collections
 			mItems.Clear();
 		}
 
+		/// <summary>
+		/// Adds an item into the octree, without linking.
+		/// If you'd like to rebuild the octree, call Build
+		/// </summary>
 		public void Add( TItem item ) => mItems.Add( item );
 
 		/// <summary>
@@ -125,7 +135,7 @@ namespace Elegy.Collections
 			mLeaves.Clear();
 			mNodes.Clear();
 
-			NTreeNode<TBound, TItem> node = new( mBound, mDimensions );
+			STreeNode<TBound, TItem> node = new( mBound, mDimensions );
 			mNodes.Add( node );
 
 			// No elements, root node is empty
@@ -137,7 +147,7 @@ namespace Elegy.Collections
 			// Fill with items
 			for ( int i = 0; i < mItems.Count; i++ )
 			{
-				if ( IntersectsBound( mItems[i], mBound ) )
+				if ( IsInBound( mItems[i], mBound ) )
 				{
 					node.Add( i );
 				}
@@ -156,7 +166,10 @@ namespace Elegy.Collections
 			}
 		}
 
-		private void BuildNode( NTreeNode<TBound, TItem> node )
+		/// <summary>
+		/// Builds nodes recursively.
+		/// </summary>
+		protected void BuildNode( STreeNode<TBound, TItem> node )
 		{
 			// Bail out, no need to subdivide
 			if ( !ShouldSubdivide( node ) )
@@ -167,18 +180,12 @@ namespace Elegy.Collections
 			// The node can be subdivided, create the child nodes
 			// and figure out which element belongs to which node
 			int itemIndex = -1;
-			node.CreateChildren( mNodes, GetSubdividedVolumeForChild );
+			node.CreateChildren( mNodes, GetChildVolume );
 			node.ForEachItem( mItems, item =>
 			{
 				itemIndex++;
 
-				TBound[] childrenBounds = new TBound[Combinations];
-				for ( int i = 0; i < childrenBounds.Length; i++ )
-				{
-					childrenBounds[i] = node.Children[i].Bound;
-				}
-
-				if ( ResolveIntersections( childrenBounds, item, out int[] hits ) )
+				if ( CollectIntersections( node, item, out int[] hits ) )
 				{
 					for ( int i = 0; i < hits.Length; i++ )
 					{

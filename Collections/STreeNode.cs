@@ -13,14 +13,14 @@ namespace Elegy.Collections
 	/// <typeparam name="TItem">
 	/// For example: <seealso cref="Vector3"/> or anything, really!
 	/// </typeparam>
-	public class NTreeNode<TBound, TItem> where TBound : struct
+	public class STreeNode<TBound, TItem> where TBound : struct
 	{
 		#region Private fields
 		private bool mIsLeaf = true;
 		private readonly int mDimensions;
 		private TBound mBound;
 		private List<int> mItemIndices = new();
-		private NTreeNode<TBound, TItem>[] mChildren = Array.Empty<NTreeNode<TBound, TItem>>();
+		private STreeNode<TBound, TItem>[] mChildren = Array.Empty<STreeNode<TBound, TItem>>();
 		#endregion
 
 		#region Properties
@@ -52,34 +52,36 @@ namespace Elegy.Collections
 		/// <summary>
 		/// This node's children.
 		/// </summary>
-		public NTreeNode<TBound, TItem>[] Children => mChildren;
+		public STreeNode<TBound, TItem>[] Children => mChildren;
 		#endregion
 
 		/// <summary>
 		/// The constructor of this tree node.
 		/// </summary>
 		/// <param name="bound">
-		/// The bounding volume to bind a subset of <paramref name="items"/> to.
+		/// The bounding volume to bind a subset of items to.
 		/// </param>
 		/// <param name="dimensions">
 		/// Dimensionality of the tree. (2 or 3 usually)
 		/// </param>
-		public NTreeNode(TBound bound, int dimensions )
+		public STreeNode(TBound bound, int dimensions )
 		{
 			mDimensions = dimensions;
 			mBound = bound;
 		}
 
 		/// <summary>
-		/// Adds an item to the node. The <paramref name="unique"/> parameter
-		/// can affect performance and is needless if your indices are guaranteed
-		/// to be unique.
+		/// Adds an item to the node. The <paramref name="unique"/> parameter can 
+		/// affect performance and is needless if your indices are guaranteed to be unique.
 		/// </summary>
 		public void Add( int itemIndex, bool unique = false )
 		{
-			if ( unique && mItemIndices.Contains( itemIndex ) )
+			if ( unique )
 			{
-				return;
+				if ( mItemIndices.Contains( itemIndex ) )
+				{
+					return;
+				}
 			}
 
 			mItemIndices.Add( itemIndex );
@@ -88,10 +90,10 @@ namespace Elegy.Collections
 		/// <summary>
 		/// Creates children for this node, not recursive though!
 		/// </summary>
-		public void CreateChildren( List<NTreeNode<TBound, TItem>> treeNodes,
-			NTree<TBound, TItem>.GetSubdividedVolumeForChildDelegate boundSubdivisionMethod )
+		public void CreateChildren( List<STreeNode<TBound, TItem>> treeNodes,
+			STree<TBound, TItem>.GetChildVolumeFn boundSubdivisionMethod )
 		{
-			mChildren = new NTreeNode<TBound, TItem>[1 << Dimensions];
+			mChildren = new STreeNode<TBound, TItem>[1 << Dimensions];
 			for ( int i = 0; i < Combinations; i++ )
 			{
 				mChildren[i] = new( boundSubdivisionMethod( mBound, i ), Dimensions );
@@ -121,7 +123,7 @@ namespace Elegy.Collections
 		/// <summary>
 		/// Executes the <paramref name="method"/> for each child node.
 		/// </summary>
-		public void ForEachChildNode( Action<NTreeNode<TBound, TItem>> method )
+		public void ForEachChildNode( Action<STreeNode<TBound, TItem>> method )
 		{
 			if ( IsLeaf() )
 			{
