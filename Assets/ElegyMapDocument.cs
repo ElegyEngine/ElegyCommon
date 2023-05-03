@@ -90,22 +90,25 @@ namespace Elegy.Assets
 			file.WriteLine( "	{" );
 			foreach ( var mesh in CollisionMeshes )
 			{
-				file.WriteLine( "		Meshlets" );
+				file.WriteLine( "		CollisionMesh" );
 				file.WriteLine( "		{" );
+				file.WriteLine( "			Meshlets" );
+				file.WriteLine( "			{" );
 				foreach ( var meshlet in mesh.Meshlets )
 				{
-					file.WriteLine( "			CollisionMeshlet" );
-					file.WriteLine( "			{" );
-					file.WriteLine( $"				MaterialName \"{meshlet.MaterialName}\"" );
-					file.WriteLine( "				Positions" );
+					file.WriteLine( "				CollisionMeshlet" );
 					file.WriteLine( "				{" );
+					file.WriteLine( $"					MaterialName \"{meshlet.MaterialName}\"" );
+					file.WriteLine( "					Positions" );
+					file.WriteLine( "					{" );
 					for ( int i = 0; i < meshlet.Positions.Count; i++ )
 					{
-						file.WriteLine( $"					( {meshlet.Positions[i].X} {meshlet.Positions[i].Y} {meshlet.Positions[i].Z} )" );
+						file.WriteLine( $"						( {meshlet.Positions[i].X} {meshlet.Positions[i].Y} {meshlet.Positions[i].Z} )" );
 					}
+					file.WriteLine( "					}" );
 					file.WriteLine( "				}" );
-					file.WriteLine( "			}" );
 				}
+				file.WriteLine( "			}" );
 				file.WriteLine( "		}" );
 			}
 			file.WriteLine( "	}" );
