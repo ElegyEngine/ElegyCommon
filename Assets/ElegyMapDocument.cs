@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MIT
 
 using Elegy.Assets.ElegyMapData;
+using Elegy.Text;
+using Elegy.Utilities;
 
 namespace Elegy.Assets
 {
@@ -212,6 +214,549 @@ namespace Elegy.Assets
 			file.WriteLine( "	}" );
 
 			file.WriteLine( "}" );
+		}
+
+		// Everything below is throwaway code, hopefully will be replaced in June
+
+		/// <summary>
+		/// Loads an <see cref="ElegyMapDocument"/> from a file.
+		/// </summary>
+		/// <exception cref="Exception">File isn't an ELF</exception>
+		public static ElegyMapDocument LoadFromFile( string path )
+		{
+			Lexer lexer = new( File.ReadAllText( path ) );
+
+			if ( !lexer.Expect( "ElegyLevelFile", true ) )
+			{
+				throw new Exception( $"'s{path}' is not a valid Elegy level file" );
+			}
+
+			if ( !lexer.Expect( "{", true ) )
+			{
+				throw new Exception( $"Expected '{{' on the 2nd line of '{path}'" );
+			}
+
+			ElegyMapDocument map = new();
+
+			while ( true )
+			{
+				string token = lexer.Next();
+
+				switch ( token )
+				{
+					case "}": break;
+					case "WorldMeshIds": map.WorldMeshIds = ParseWorldMeshIds( lexer ); break;
+					case "Entities": map.Entities = ParseEntities( lexer ); break;
+					case "CollisionMeshes": map.CollisionMeshes = ParseCollisionMeshes( lexer ); break;
+					case "OccluderMeshes": break; // Occluder meshes can be unsupported for now
+					case "RenderMeshes": map.RenderMeshes = ParseRenderMeshes( lexer ); break;
+					default: throw new Exception( $"Unknown token '{token}' {lexer.GetLineInfo()}" );
+				}
+
+				if ( token == "}" || lexer.IsEnd() )
+				{
+					break;
+				}
+			}
+
+			return map;
+		}
+
+		private static List<int> ParseWorldMeshIds( Lexer lexer )
+		{
+			if ( !lexer.Expect( "{", true ) )
+			{
+				throw new Exception( $"Expected '{{' at {lexer.GetLineInfo()}" );
+			}
+
+			List<int> meshIds = new();
+
+			while ( true )
+			{
+				string token = lexer.Next();
+
+				if ( token == "}" )
+				{
+					break;
+				}
+				else if ( int.TryParse( token, out int result ) )
+				{
+					meshIds.Add( result );
+				}
+				else
+				{
+					throw new Exception( $"Unknown token '{token}' {lexer.GetLineInfo()}" );
+				}
+			}
+
+			return meshIds;
+		}
+
+		private static List<Entity> ParseEntities( Lexer lexer )
+		{
+			if ( !lexer.Expect( "{", true ) )
+			{
+				throw new Exception( $"Expected '{{' at {lexer.GetLineInfo()}" );
+			}
+
+			List<Entity> entities = new();
+
+			while ( true )
+			{
+				string token = lexer.Next();
+
+				if ( token == "}" )
+				{
+					break;
+				}
+				else if ( token == "Entity" )
+				{
+					if ( !lexer.Expect( "{", true ) )
+					{
+						throw new Exception( $"Expected '{{' at {lexer.GetLineInfo()}" );
+					}
+
+					Entity entity = new();
+					bool parseEntity = true;
+					while ( parseEntity )
+					{
+						token = lexer.Next();
+
+						switch ( token )
+						{
+							case "}": parseEntity = false; break;
+							case "RenderMeshId": entity.RenderMeshId = int.Parse( lexer.Next() ); break;
+							case "CollisionMeshId": entity.CollisionMeshId = int.Parse( lexer.Next() ); break;
+							case "OccluderMeshId": entity.OccluderMeshId = int.Parse( lexer.Next() ); break;
+							case "Attributes":
+								if ( !lexer.Expect( "{", true ) )
+								{
+									throw new Exception( $"Expected '{{' at {lexer.GetLineInfo()}" );
+								}
+
+								bool parseAttributes = true;
+								while ( parseAttributes )
+								{
+									token = lexer.Next();
+									entity.Attributes.Add( token, lexer.Next() );
+								}
+								break;
+							default: throw new Exception( $"Unknown token '{token}' {lexer.GetLineInfo()}" );
+						}
+					}
+
+					entities.Add( entity );
+				}
+				else
+				{
+					throw new Exception( $"Unknown token '{token}' {lexer.GetLineInfo()}" );
+				}
+			}
+
+			return entities;
+		}
+
+		private static List<CollisionMesh> ParseCollisionMeshes( Lexer lexer )
+		{
+			CollisionMeshlet ParseMeshlet()
+			{
+				if ( !lexer.Expect( "{", true ) )
+				{
+					throw new Exception( $"Expected '{{' at {lexer.GetLineInfo()}" );
+				}
+
+				CollisionMeshlet meshlet = new();
+
+				while ( true )
+				{
+					string token = lexer.Next();
+
+					if ( token == "}" )
+					{
+						break;
+					}
+					else if ( token == "MaterialName" )
+					{
+						meshlet.MaterialName = lexer.Next();
+					}
+					else if ( token == "Positions" )
+					{
+						if ( !lexer.Expect( "{", true ) )
+						{
+							throw new Exception( $"Expected '{{' at {lexer.GetLineInfo()}" );
+						}
+
+						while ( true )
+						{
+							token = lexer.Next();
+
+							if ( token == "}" )
+							{
+								break;
+							}
+							else if ( token == "(" )
+							{
+								Vector3 position = new();
+								position.X = Parse.Float( lexer.Next() );
+								position.Y = Parse.Float( lexer.Next() );
+								position.Z = Parse.Float( lexer.Next() );
+
+								if ( !lexer.Expect( "}", true ) )
+								{
+									throw new Exception( $"Expected '}}' at {lexer.GetLineInfo()}" );
+								}
+
+								meshlet.Positions.Add( position );
+							}
+							else
+							{
+								throw new Exception( $"Unknown token '{token}' {lexer.GetLineInfo()}" );
+							}
+						}
+					}
+					else
+					{
+						throw new Exception( $"Unknown token '{token}' {lexer.GetLineInfo()}" );
+					}
+				}
+
+				return meshlet;
+			}
+
+			if ( !lexer.Expect( "{", true ) )
+			{
+				throw new Exception( $"Expected '{{' at {lexer.GetLineInfo()}" );
+			}
+
+			List<CollisionMesh> collisionMeshes = new();
+
+			while ( true )
+			{
+				string token = lexer.Next();
+
+				if ( token == "}" )
+				{
+					break;
+				}
+				else if ( token == "CollisionMesh" )
+				{
+					if ( !lexer.Expect( "{", true ) )
+					{
+						throw new Exception( $"Expected '{{' at {lexer.GetLineInfo()}" );
+					}
+
+					CollisionMesh mesh = new();
+
+					while ( true )
+					{
+						token = lexer.Next();
+
+						if ( token == "}" )
+						{
+							break;
+						}
+						else if ( token == "Meshlets" )
+						{
+							if ( !lexer.Expect( "{", true ) )
+							{
+								throw new Exception( $"Expected '{{' at {lexer.GetLineInfo()}" );
+							}
+
+							while ( true )
+							{
+								token = lexer.Next();
+
+								if ( token == "}" )
+								{
+									break;
+								}
+								else if ( token == "CollisionMeshlet" )
+								{
+									mesh.Meshlets.Add( ParseMeshlet() );
+								}
+								else
+								{
+									throw new Exception( $"Unknown token '{token}' {lexer.GetLineInfo()}" );
+								}
+							}
+						}
+						else
+						{
+							throw new Exception( $"Unknown token '{token}' {lexer.GetLineInfo()}" );
+						}
+					}
+
+					collisionMeshes.Add( mesh );
+				}
+				else
+				{
+					throw new Exception( $"Unknown token '{token}' {lexer.GetLineInfo()}" );
+				}
+			}
+
+			return collisionMeshes;
+		}
+
+		private static List<RenderMesh> ParseRenderMeshes( Lexer lexer )
+		{
+			RenderSurface ParseSurface()
+			{
+				if ( !lexer.Expect( "{", true ) )
+				{
+					throw new Exception( $"Expected '{{' at {lexer.GetLineInfo()}" );
+				}
+
+				RenderSurface surface = new();
+
+				while ( true )
+				{
+					string token = lexer.Next();
+
+					if ( token == "}" )
+					{
+						break;
+					}
+					else if ( token == "BoundingBox" )
+					{
+						Vector3 position = new();
+						Vector3 size = new();
+
+						if ( !lexer.Expect( "(", true ) )
+						{
+							throw new Exception( $"Expected '(' at {lexer.GetLineInfo()}" );
+						}
+
+						position.X = Parse.Float( lexer.Next() );
+						position.Y = Parse.Float( lexer.Next() );
+						position.Z = Parse.Float( lexer.Next() );
+
+						if ( !lexer.Expect( ")", true ) )
+						{
+							throw new Exception( $"Expected ')' at {lexer.GetLineInfo()}" );
+						}
+
+						if ( !lexer.Expect( "(", true ) )
+						{
+							throw new Exception( $"Expected '(' at {lexer.GetLineInfo()}" );
+						}
+
+						size.X = Parse.Float( lexer.Next() );
+						size.Y = Parse.Float( lexer.Next() );
+						size.Z = Parse.Float( lexer.Next() );
+
+						if ( !lexer.Expect( ")", true ) )
+						{
+							throw new Exception( $"Expected ')' at {lexer.GetLineInfo()}" );
+						}
+
+						surface.BoundingBox = new Aabb( position, size );
+					}
+					else if ( token == "VertexCount" )
+					{
+						surface.VertexCount = Parse.Int( lexer.Next() );
+					}
+					else if ( token == "Material" )
+					{
+						surface.Material = lexer.Next();
+					}
+					else if ( token == "LightmapTexture" )
+					{
+						surface.LightmapTexture = lexer.Next();
+					}
+					else if ( token == "Positions" || token == "Normals" )
+					{
+						if ( !lexer.Expect( "{", true ) )
+						{
+							throw new Exception( $"Expected '{{' at {lexer.GetLineInfo()}" );
+						}
+
+						List<Vector3> list = token == "Positions" ? surface.Positions : surface.Normals;
+
+						while ( true )
+						{
+							token = lexer.Next();
+
+							if ( token == "}" )
+							{
+								break;
+							}
+							else if ( token == "(" )
+							{
+								Vector3 vec = new();
+								vec.X = Parse.Float( lexer.Next() );
+								vec.Y = Parse.Float( lexer.Next() );
+								vec.Z = Parse.Float( lexer.Next() );
+
+								if ( !lexer.Expect( ")", true ) )
+								{
+									throw new Exception( $"Expected ')' at {lexer.GetLineInfo()}" );
+								}
+
+								list.Add( vec );
+							}
+							else
+							{
+								throw new Exception( $"Unknown token '{token}' {lexer.GetLineInfo()}" );
+							}
+						}
+					}
+					else if ( token == "Uvs" || token == "LightmapUvs" )
+					{
+						if ( !lexer.Expect( "{", true ) )
+						{
+							throw new Exception( $"Expected '{{' at {lexer.GetLineInfo()}" );
+						}
+
+						List<Vector2> list = token == "Uvs" ? surface.Uvs : surface.LightmapUvs;
+
+						while ( true )
+						{
+							token = lexer.Next();
+
+							if ( token == "}" )
+							{
+								break;
+							}
+							else if ( token == "(" )
+							{
+								Vector2 vec = new();
+								vec.X = Parse.Float( lexer.Next() );
+								vec.Y = Parse.Float( lexer.Next() );
+
+								if ( !lexer.Expect( ")", true ) )
+								{
+									throw new Exception( $"Expected ')' at {lexer.GetLineInfo()}" );
+								}
+
+								list.Add( vec );
+							}
+							else
+							{
+								throw new Exception( $"Unknown token '{token}' {lexer.GetLineInfo()}" );
+							}
+						}
+					}
+					else if ( token == "Colours" )
+					{
+						if ( !lexer.Expect( "{", true ) )
+						{
+							throw new Exception( $"Expected '{{' at {lexer.GetLineInfo()}" );
+						}
+
+						while ( true )
+						{
+							token = lexer.Next();
+
+							if ( token == "}" )
+							{
+								break;
+							}
+							else if ( token == "(" )
+							{
+								Vector4 vec = new();
+								vec.X = Parse.Float( lexer.Next() );
+								vec.Y = Parse.Float( lexer.Next() );
+								vec.Z = Parse.Float( lexer.Next() );
+								vec.W = Parse.Float( lexer.Next() );
+
+								if ( !lexer.Expect( ")", true ) )
+								{
+									throw new Exception( $"Expected ')' at {lexer.GetLineInfo()}" );
+								}
+
+								surface.Colours.Add( vec );
+							}
+							else
+							{
+								throw new Exception( $"Unknown token '{token}' {lexer.GetLineInfo()}" );
+							}
+						}
+					}
+					else if ( token == "Indices" )
+					{
+						if ( !lexer.Expect( "{", true ) )
+						{
+							throw new Exception( $"Expected '{{' at {lexer.GetLineInfo()}" );
+						}
+
+						while ( true )
+						{
+							token = lexer.Next();
+
+							if ( token == "}" )
+							{
+								break;
+							}
+							else if ( int.TryParse( token, out int result ) )
+							{
+								surface.Indices.Add( result );
+							}
+							else
+							{
+								throw new Exception( $"Unknown token '{token}' {lexer.GetLineInfo()}" );
+							}
+						}
+					}
+					else
+					{
+						throw new Exception( $"Unknown token '{token}' {lexer.GetLineInfo()}" );
+					}
+				}
+
+				return surface;
+			}
+
+			if ( !lexer.Expect( "{", true ) )
+			{
+				throw new Exception( $"Expected '{{' at {lexer.GetLineInfo()}" );
+			}
+
+			List<RenderMesh> renderMeshes = new();
+
+			while ( true )
+			{
+				string token = lexer.Next();
+
+				if ( token == "}" )
+				{
+					break;
+				}
+				else if ( token == "RenderMesh" )
+				{
+					if ( !lexer.Expect( "{", true ) )
+					{
+						throw new Exception( $"Expected '{{' at {lexer.GetLineInfo()}" );
+					}
+
+					RenderMesh mesh = new();
+
+					while ( true )
+					{
+						token = lexer.Next();
+
+						if ( token == "}" )
+						{
+							break;
+						}
+						else if ( token == "Surfaces" )
+						{
+							mesh.Surfaces.Add( ParseSurface() );
+						}
+						else
+						{
+							throw new Exception( $"Unknown token '{token}' {lexer.GetLineInfo()}" );
+						}
+					}
+
+					renderMeshes.Add( mesh );
+				}
+				else
+				{
+					throw new Exception( $"Unknown token '{token}' {lexer.GetLineInfo()}" );
+				}
+			}
+
+			return renderMeshes;
 		}
 	}
 }
