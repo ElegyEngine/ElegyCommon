@@ -5,6 +5,9 @@ using Elegy.Assets.ElegyMapData;
 
 namespace Elegy.Assets
 {
+	/// <summary>
+	/// Standard Elegy level format.
+	/// </summary>
 	public class ElegyMapDocument
 	{
 		//// <summary>
@@ -37,6 +40,9 @@ namespace Elegy.Assets
 		/// </summary>
 		public List<RenderMesh> RenderMeshes { get; set; } = new();
 
+		/// <summary>
+		/// Writes the contents of this <see cref="ElegyMapDocument"/> to a file.
+		/// </summary>
 		public void WriteToFile( string path )
 		{
 			using var file = File.CreateText( path );
