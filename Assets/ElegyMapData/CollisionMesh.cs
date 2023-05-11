@@ -3,6 +3,9 @@
 
 namespace Elegy.Assets.ElegyMapData
 {
+	/// <summary>
+	/// A collision submesh.
+	/// </summary>
 	public class CollisionMeshlet
 	{
 		/// <summary>
@@ -16,8 +19,14 @@ namespace Elegy.Assets.ElegyMapData
 		public string MaterialName { get; set; } = string.Empty;
 	}
 
+	/// <summary>
+	/// A collision mesh.
+	/// </summary>
 	public class CollisionMesh
 	{
+		/// <summary>
+		/// Collision submeshes.
+		/// </summary>
 		public List<CollisionMeshlet> Meshlets { get; set; } = new();
 	}
 }
