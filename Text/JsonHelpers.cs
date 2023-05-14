@@ -1,7 +1,9 @@
 ﻿// SPDX-FileCopyrightText: 2022-2023 Admer Šuko
 // SPDX-License-Identifier: MIT
 
+using Elegy.Text.JsonAdapters;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Elegy.Text
 {
@@ -13,9 +15,21 @@ namespace Elegy.Text
 		private readonly static JsonSerializerOptions Options = new()
 		{
 			AllowTrailingCommas = true,
+			NumberHandling =
+				JsonNumberHandling.AllowNamedFloatingPointLiterals |
+				JsonNumberHandling.AllowReadingFromString,
 			PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
 			ReadCommentHandling = JsonCommentHandling.Skip,
-			WriteIndented = true
+			WriteIndented = true,
+
+			Converters =
+			{
+				new GodotVector4Converter(),
+				new GodotVector3Converter(),
+				new GodotVector2Converter(),
+				new GodotAabbConverter(),
+				new GodotRect2Converter()
+			}
 		};
 
 		/// <summary>
@@ -42,6 +56,26 @@ namespace Elegy.Text
 			return true;
 		}
 
+		/// <summary>
+		/// Reads JSON data from <paramref name="path"/> and returns it as a/an <typeparamref name="T"/>.
+		/// </summary>
+		/// <returns><c>true</c> on success, <c>false</c> if the file cannot be found.</returns>
+		public static T? LoadFrom<T>( string path ) where T : class
+		{
+			try
+			{
+				ReadOnlySpan<byte> jsonContent = File.ReadAllBytes( path );
+				return JsonSerializer.Deserialize<T>( jsonContent, Options );
+			}
+			catch ( DirectoryNotFoundException )
+			{
+				return null;
+			}
+			catch ( FileNotFoundException )
+			{
+				return null;
+			}
+		}
 
 		/// <summary>
 		/// Writes <paramref name="what"/> into a file <paramref name="path"/>.
