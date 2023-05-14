@@ -64,5 +64,20 @@ namespace Elegy.Extensions
 		{
 			return list.GetValueOrDefault( key, "0 0 0 0" ).ToVector4();
 		}
+
+		public static void SetVector2( this Dictionary<string, string> list, string key, Vector2 value )
+		{
+			list[key] = $"{value.X} {value.Y}";
+		}
+
+		public static void SetVector3( this Dictionary<string, string> list, string key, Vector3 value )
+		{
+			list[key] = $"{value.X} {value.Y} {value.Z}";
+		}
+
+		public static void SetVector4( this Dictionary<string, string> list, string key, Vector4 value )
+		{
+			list[key] = $"{value.X} {value.Y} {value.Z} {value.W}";
+		}
 	}
 }
