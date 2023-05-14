@@ -5,6 +5,9 @@ using System.Text.Json;
 
 namespace Elegy.Text
 {
+	/// <summary>
+	/// JSON reading and writing utilities.
+	/// </summary>
 	public static class JsonHelpers
 	{
 		private readonly static JsonSerializerOptions Options = new()
@@ -15,6 +18,11 @@ namespace Elegy.Text
 			WriteIndented = true
 		};
 
+		/// <summary>
+		/// Reads JSON data from <paramref name="path"/> and stores it into
+		/// <paramref name="outObject"/>.
+		/// </summary>
+		/// <returns><c>true</c> on success, <c>false</c> if the file cannot be found.</returns>
 		public static bool LoadFrom<T>( ref T outObject, string path ) where T : struct
 		{
 			try
@@ -34,6 +42,11 @@ namespace Elegy.Text
 			return true;
 		}
 
+
+		/// <summary>
+		/// Writes <paramref name="what"/> into a file <paramref name="path"/>.
+		/// </summary>
+		/// <returns><c>true</c> on success, <c>false</c> if the path is invalid.</returns>
 		public static bool Write<T>( T what, string path )
 		{
 			try
