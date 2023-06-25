@@ -1,6 +1,8 @@
 ﻿// SPDX-FileCopyrightText: 2022-2023 Admer Šuko
 // SPDX-License-Identifier: MIT
 
+using Matrix4x4 = System.Numerics.Matrix4x4;
+
 namespace Elegy.Assets.ModelData
 {
 	/// <summary>
@@ -30,8 +32,35 @@ namespace Elegy.Assets.ModelData
 	/// </summary>
 	public class Mesh
 	{
+		/// <summary>
+		/// Name of the model, usually the file name.
+		/// </summary>
 		public string Name { get; set; } = string.Empty;
+
+		/// <summary>
+		/// Material name, is used by the renderer system to look for materials.
+		/// </summary>
+		public string MaterialName { get; set; } = string.Empty;
+
+		/// <summary>
+		/// Vertex data.
+		/// </summary>
 		public List<Vertex> Vertices { get; set; } = new();
 
+		/// <summary>
+		/// Vertex indices.
+		/// </summary>
+		public List<int> Indices { get; set; } = new();
+	}
+
+	/// <summary>
+	/// Represents a joint between 2 bones.
+	/// It is basically a transformation matrix with a name.
+	/// </summary>
+	public class BoneJoint
+	{
+		public string Name { get; set; } = string.Empty;
+
+		public Matrix4x4 Transform { get; set; } = Matrix4x4.Identity;
 	}
 }
