@@ -123,14 +123,8 @@ namespace Elegy.Text
 					}
 
 					// Safely increment the position so we don't go out of bounds
+					// Bumps up the line counter too, if we crossed a newline
 					IncrementPosition();
-
-					// If we're on a newline now, bump up the line counter
-					if ( !IsEnd() && IsEndOfLine() )
-					{
-						mLineNumber++;
-						mLineColumn = 0;
-					}
 				}
 			} while ( result == string.Empty );
 
@@ -270,6 +264,12 @@ namespace Elegy.Text
 		{
 			if ( !IsEnd() )
 			{
+				if ( IsEndOfLine() )
+				{
+					mLineNumber++;
+					mLineColumn = -1;
+				}
+
 				mPosition++;
 				mLineColumn++;
 			}
