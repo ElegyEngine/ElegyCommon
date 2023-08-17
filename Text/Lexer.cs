@@ -195,6 +195,32 @@ namespace Elegy.Text
 		}
 
 		/// <summary>
+		/// Skips characters until a given string <paramref name="what"/> has been found.
+		/// If <paramref name="skipThatToo"/> is <c>true</c>, it'll skip that string as well.
+		/// </summary>
+		/// <param name="what"></param>
+		/// <param name="skipThatToo"></param>
+		public void SkipUntil( string what, bool skipThatToo = false )
+		{
+			while ( !IsEnd() )
+			{
+				IncrementPosition();
+				if ( mText.AsSpan().Slice( mPosition ).StartsWith( what.AsSpan() ) )
+				{
+					if ( skipThatToo )
+					{
+						for ( int i = 0; i < what.Length; i++ )
+						{
+							IncrementPosition();
+						}
+					}
+
+					return;
+				}
+			}
+		}
+
+		/// <summary>
 		/// Whether or not the end of the text has been reached.
 		/// </summary>
 		public bool IsEnd()
