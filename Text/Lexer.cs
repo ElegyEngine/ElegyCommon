@@ -144,15 +144,10 @@ namespace Elegy.Text
 		/// <returns>The next token in line, "" if EOF is reached.</returns>
 		public string Peek()
 		{
-			int oldPosition = mPosition;
-			int oldLine = mLineNumber;
-			int oldColumn = mLineColumn;
-
+			StashPosition();
 			string token = Next();
+			StashPop();
 
-			mPosition = oldPosition;
-			mLineNumber = oldLine;
-			mLineColumn = oldColumn;
 
 			return token;
 		}
