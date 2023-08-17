@@ -171,9 +171,7 @@ namespace Elegy.Text
 		/// <returns>true if the next token and expectedToken match.</returns>
 		public bool Expect( string expectedToken, bool advanceIfTrue = false )
 		{
-			int oldPosition = mPosition;
-			int oldLine = mLineNumber;
-			int oldColumn = mLineColumn;
+			StashPosition();
 
 			string token = Next();
 			bool equal = token == expectedToken;
@@ -183,9 +181,7 @@ namespace Elegy.Text
 			// But no, that's not how it works here, the position is already advanced, so we're just kinda reverting it in 3 out of 4 possible cases.
 			if ( !(advanceIfTrue && equal) )
 			{
-				mPosition = oldPosition;
-				mLineNumber = oldLine;
-				mLineColumn = oldColumn;
+				StashPop();
 			}
 
 			return equal;
@@ -197,6 +193,24 @@ namespace Elegy.Text
 		public bool IsEnd()
 		{
 			return mPosition >= mText.Length;
+		}
+
+		/// <summary>
+		/// Skip the current line.
+		/// </summary>
+		public void NewLine()
+		{
+			int nextLinePosition = mText.IndexOf( '\n', mPosition + 1 );
+			if ( nextLinePosition < 0 )
+			{
+				// This can happen if there's a comment in the last line
+				mPosition = mText.Length + 1;
+				return;
+			}
+
+			mPosition = nextLinePosition + 1;
+			mLineNumber++;
+			mLineColumn = 0;
 		}
 
 		/// <summary>
@@ -308,24 +322,25 @@ namespace Elegy.Text
 			return mText[mPosition] == '\n' || mText[mPosition] == '\r';
 		}
 
-		void NewLine()
-		{
-			int nextLinePosition = mText.IndexOf( '\n', mPosition + 1 );
-			if ( nextLinePosition < 0 )
-			{
-				// This can happen if there's a comment in the last line
-				mPosition = mText.Length + 1;
-				return;
-			}
-
-			mPosition = nextLinePosition + 1;
-			mLineNumber++;
-			mLineColumn = 0;
-		}
-
 		void ToggleQuoteMode()
 		{
 			mInQuote = !mInQuote;
+		}
+
+		void StashPosition()
+		{
+			mPositionStash = mPosition;
+			mLineNumberStash = mLineNumber;
+			mLineColumnStash = mLineColumn;
+			mInQuoteStash = mInQuote;
+		}
+
+		void StashPop()
+		{
+			mPosition = mPositionStash;
+			mLineNumber = mLineNumberStash;
+			mLineColumn = mLineColumnStash;
+			mInQuote = mInQuoteStash;
 		}
 		#endregion
 
@@ -334,6 +349,12 @@ namespace Elegy.Text
 		private int mLineNumber = 0;
 		private int mLineColumn = 0;
 		private bool mInQuote = false;
+
+		private int mPositionStash = 0;
+		private int mLineNumberStash = 0;
+		private int mLineColumnStash = 0;
+		private bool mInQuoteStash = false;
+
 		private string mText;
 		private string mDelimiters;
 		#endregion
