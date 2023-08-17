@@ -180,6 +180,24 @@ namespace Elegy.Text
 
 			return equal;
 		}
+		
+		/// <summary>
+		/// Is there anything other than whitespaces until the newline?
+		/// </summary>
+		public bool ExpectAnythingUntilNewline()
+		{
+			while ( !IsEnd() && !IsEndOfLine() )
+			{
+				IncrementPosition();
+
+				if ( mText[mPosition] != ' ' )
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
 
 		/// <summary>
 		/// Whether or not the end of the text has been reached.
