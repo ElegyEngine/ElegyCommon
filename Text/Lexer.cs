@@ -23,16 +23,26 @@ namespace Elegy.Text
 		#endregion
 
 		#region Methods
+		/// <summary>
+		/// Clears the text buffer.
+		/// </summary>
 		public void Clear()
 		{
 			mText = "";
 		}
 
+		/// <summary>
+		/// Loads the given <paramref name="text"/>
+		/// </summary>
+		/// <param name="text"></param>
 		public void Load( string text )
 		{
 			mText = text;
 		}
 
+		/// <summary>
+		/// Sets new delimiters.
+		/// </summary>
 		public void SetDelimiters( string delimiters )
 		{
 			mDelimiters = delimiters;
@@ -207,6 +217,9 @@ namespace Elegy.Text
 		#endregion
 
 		#region Properties
+		/// <summary>
+		/// Whether or not to ignore delimiters while scanning for characters.
+		/// </summary>
 		public bool IgnoreDelimiters { get; set; } = false;
 		#endregion
 
