@@ -147,9 +147,30 @@ namespace Elegy.Text
 			StashPosition();
 			string token = Next();
 			StashPop();
-
-
 			return token;
+		}
+
+		/// <summary>
+		/// Returns all characters that were encountered between the current position
+		/// and <paramref name="what"/>. If <paramref name="skipPeeked"/> is <c>true</c>,
+		/// the cursor will skip the result too.
+		/// </summary>
+		public string PeekUntil( string what, bool skipPeeked = false )
+		{
+			StashPosition();
+			SkipUntil( what, true );
+
+			string result = string.Empty;
+			if ( mPositionStash != mPosition )
+			{
+				result = mText.Substring( mPositionStash, mPosition - mPositionStash );
+			}
+
+			if ( !skipPeeked )
+			{
+				StashPop();
+			}
+			return result;
 		}
 
 		/// <summary>
