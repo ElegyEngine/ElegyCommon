@@ -170,7 +170,34 @@ namespace Elegy.Text
 			{
 				StashPop();
 			}
+
 			return result;
+		}
+
+		/// <summary>
+		/// Returns a string of tokens until the newline.
+		/// </summary>
+		public string TokensBeforeNewline()
+		{
+			string result = string.Empty;
+			while ( ExpectAnythingUntilNewline() )
+			{
+				result = Next();
+			}
+			return result;
+		}
+
+		/// <summary>
+		/// An array of tokens until the newline.
+		/// </summary>
+		public IList<string> TokenListBeforeNewline()
+		{
+			List<string> strings = new();
+			while ( ExpectAnythingUntilNewline() )
+			{
+				strings.Add( Next() );
+			}
+			return strings;
 		}
 
 		/// <summary>
@@ -196,7 +223,7 @@ namespace Elegy.Text
 
 			return equal;
 		}
-		
+
 		/// <summary>
 		/// Is there anything other than whitespaces until the newline?
 		/// </summary>
