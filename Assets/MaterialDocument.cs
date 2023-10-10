@@ -67,7 +67,7 @@ namespace Elegy.Assets
 				}
 				else
 				{
-					def.Parameters.Add( token, lex.PeekUntil( "\n", true ) );
+					def.Parameters.Add( token, lex.TokensBeforeNewline() );
 				}
 			}
 		}
@@ -121,7 +121,6 @@ namespace Elegy.Assets
 
 			while ( !lex.IsEnd() )
 			{
-				string token = lex.Next();
 				MaterialDefinition? materialDef = ParseMaterialDefinition( lex );
 
 				if ( materialDef is not null )
