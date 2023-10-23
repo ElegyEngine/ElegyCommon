@@ -22,12 +22,7 @@ namespace Elegy.Text.JsonAdapters
 
 		public override void Write( Utf8JsonWriter writer, Vector4 value, JsonSerializerOptions options )
 		{
-			writer.WriteStartArray();
-			writer.WriteNumberValue( value.X );
-			writer.WriteNumberValue( value.Y );
-			writer.WriteNumberValue( value.Z );
-			writer.WriteNumberValue( value.W );
-			writer.WriteEndArray();
+			writer.WriteRawValue( $"[{value.X}, {value.Y}, {value.Z}, {value.W}]", true );
 		}
 	}
 
@@ -48,11 +43,7 @@ namespace Elegy.Text.JsonAdapters
 
 		public override void Write( Utf8JsonWriter writer, Vector3 value, JsonSerializerOptions options )
 		{
-			writer.WriteStartArray();
-			writer.WriteNumberValue( value.X );
-			writer.WriteNumberValue( value.Y );
-			writer.WriteNumberValue( value.Z );
-			writer.WriteEndArray();
+			writer.WriteRawValue( $"[{value.X}, {value.Y}, {value.Z}]", true );
 		}
 	}
 
@@ -72,10 +63,7 @@ namespace Elegy.Text.JsonAdapters
 
 		public override void Write( Utf8JsonWriter writer, Vector2 value, JsonSerializerOptions options )
 		{
-			writer.WriteStartArray();
-			writer.WriteNumberValue( value.X );
-			writer.WriteNumberValue( value.Y );
-			writer.WriteEndArray();
+			writer.WriteRawValue( $"[{value.X}, {value.Y}]", true );
 		}
 	}
 
@@ -101,14 +89,7 @@ namespace Elegy.Text.JsonAdapters
 
 		public override void Write( Utf8JsonWriter writer, Aabb value, JsonSerializerOptions options )
 		{
-			writer.WriteStartArray();
-			writer.WriteNumberValue( value.Position.X );
-			writer.WriteNumberValue( value.Position.Y );
-			writer.WriteNumberValue( value.Position.Z );
-			writer.WriteNumberValue( value.Size.X );
-			writer.WriteNumberValue( value.Size.Y );
-			writer.WriteNumberValue( value.Size.Z );
-			writer.WriteEndArray();
+			writer.WriteRawValue( $"[{value.Position.X}, {value.Position.Y}, {value.Position.Z}, {value.Size.X}, {value.Size.Y}, {value.Size.Z}]", true );
 		}
 	}
 
@@ -132,12 +113,7 @@ namespace Elegy.Text.JsonAdapters
 
 		public override void Write( Utf8JsonWriter writer, Rect2 value, JsonSerializerOptions options )
 		{
-			writer.WriteStartArray();
-			writer.WriteNumberValue( value.Position.X );
-			writer.WriteNumberValue( value.Position.Y );
-			writer.WriteNumberValue( value.Size.X );
-			writer.WriteNumberValue( value.Size.Y );
-			writer.WriteEndArray();
+			writer.WriteRawValue( $"[{value.Position.X}, {value.Position.Y}, {value.Size.X}, {value.Size.Y}]", true );
 		}
 	}
 }
