@@ -12,22 +12,32 @@ namespace Elegy.Utilities
 {
     public class ByteBuffer : IByteBuffer
 	{
+		/// <inheritdoc/>
 		public int Position { get; private set; } = 0;
+		/// <inheritdoc/>
 		public IReadOnlyList<byte> Data => mData;
+		/// <inheritdoc/>
 		public ReadOnlySpan<byte> DataSpan => mData.AsSpan();
 
 		private byte[] mData;
 
+		/// <summary>
+		/// Initialises the byte buffer with an existing buffer of data.
+		/// </summary>
 		public ByteBuffer( byte[] data )
 		{
 			mData = data;
 		}
 
+		/// <summary>
+		/// Initialises the byte buffer so it can be filled up to <paramref name="size"/> bytes.
+		/// </summary>
 		public ByteBuffer( int size )
 		{
 			mData = new byte[size];
 		}
 
+		/// <inheritdoc/>
 		public void Advance( int bytes )
 		{
 			Position += bytes;
@@ -42,11 +52,13 @@ namespace Elegy.Utilities
 			}
 		}
 
+		/// <inheritdoc/>
 		public void ResetPosition()
 		{
 			Position = 0;
 		}
 
+		/// <inheritdoc/>
 		public void ResetData()
 		{
 			Unsafe.InitBlockUnaligned( 
@@ -60,6 +72,7 @@ namespace Elegy.Utilities
 			return mData.AsSpan( Position );
 		}
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public void Write<T>( T value ) where T : unmanaged
 		{
@@ -67,6 +80,7 @@ namespace Elegy.Utilities
 			Advance( Marshal.SizeOf<T>() );
 		}
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public T Read<T>() where T : unmanaged
 		{
@@ -75,22 +89,27 @@ namespace Elegy.Utilities
 			return value;
 		}
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public void WriteU8( byte value )
 			=> Write( value );
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public void WriteBool( bool value )
 			=> Write( (byte)(value ? 1 : 0) );
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public void WriteChar( char value )
 			=> Write( (byte)value );
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public void WriteEnum<T>( T value ) where T : struct, Enum, IConvertible
 					=> Write( value.ToByte( CultureInfo.InvariantCulture ) );
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public void WriteI16( short value )
 		{
@@ -98,6 +117,7 @@ namespace Elegy.Utilities
 			Advance( 2 );
 		}
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public void WriteU16( ushort value )
 		{
@@ -105,6 +125,7 @@ namespace Elegy.Utilities
 			Advance( 2 );
 		}
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public void WriteI32( int value )
 		{
@@ -112,6 +133,7 @@ namespace Elegy.Utilities
 			Advance( 4 );
 		}
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public void WriteU32( uint value )
 		{
@@ -119,6 +141,7 @@ namespace Elegy.Utilities
 			Advance( 4 );
 		}
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public void WriteI64( long value )
 		{
@@ -126,6 +149,7 @@ namespace Elegy.Utilities
 			Advance( 8 );
 		}
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public void WriteU64( ulong value )
 		{
@@ -133,6 +157,7 @@ namespace Elegy.Utilities
 			Advance( 8 );
 		}
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public void WriteF16( Half value )
 		{
@@ -140,6 +165,7 @@ namespace Elegy.Utilities
 			Advance( 2 );
 		}
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public void WriteF32( float value )
 		{
@@ -147,6 +173,7 @@ namespace Elegy.Utilities
 			Advance( 4 );
 		}
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public void WriteF64( double value )
 		{
@@ -154,22 +181,27 @@ namespace Elegy.Utilities
 			Advance( 8 );
 		}
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public byte ReadU8()
 			=> Read<byte>();
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public bool ReadBool()
 			=> ReadU8() > 0;
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public char ReadChar()
 			=> (char)ReadU8();
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public T ReadEnum<T>() where T : struct, Enum
 			=> (T)Enum.ToObject( typeof( T ), ReadU8() );
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public short ReadI16()
 		{
@@ -178,6 +210,7 @@ namespace Elegy.Utilities
 			return value;
 		}
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public ushort ReadU16()
 		{
@@ -186,6 +219,7 @@ namespace Elegy.Utilities
 			return value;
 		}
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public int ReadI32()
 		{
@@ -194,6 +228,7 @@ namespace Elegy.Utilities
 			return value;
 		}
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public uint ReadU32()
 		{
@@ -202,6 +237,7 @@ namespace Elegy.Utilities
 			return value;
 		}
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public long ReadI64()
 		{
@@ -210,6 +246,7 @@ namespace Elegy.Utilities
 			return value;
 		}
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public ulong ReadU64()
 		{
@@ -218,6 +255,7 @@ namespace Elegy.Utilities
 			return value;
 		}
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public Half ReadF16()
 		{
@@ -226,6 +264,7 @@ namespace Elegy.Utilities
 			return value;
 		}
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public float ReadF32()
 		{
@@ -234,6 +273,7 @@ namespace Elegy.Utilities
 			return value;
 		}
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public double ReadF64()
 		{
@@ -242,12 +282,14 @@ namespace Elegy.Utilities
 			return value;
 		}
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public void WriteObject<T>( T value ) where T : IByteSerialisable
 		{
 			value.Serialise( this );
 		}
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public T ReadObject<T>() where T : IByteSerialisable, new()
 		{
@@ -260,6 +302,7 @@ namespace Elegy.Utilities
 
 		#region String writing
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public void WriteString( string value, Encoding stringEncoding, StringLength stringLength )
 		{
@@ -297,12 +340,14 @@ namespace Elegy.Utilities
 			Advance( bufferLength );
 		}
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public void WriteStringAscii( string value, StringLength stringLength )
 		{
 			WriteString( value, Encoding.ASCII, stringLength );
 		}
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public void WriteStringUtf8( string value, StringLength stringLength )
 		{
@@ -313,6 +358,7 @@ namespace Elegy.Utilities
 
 		#region String reading
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public string ReadString( Encoding stringEncoding, StringLength stringLength )
 		{
@@ -344,12 +390,14 @@ namespace Elegy.Utilities
 			return value;
 		}
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public string ReadStringAscii( StringLength stringLength )
 		{
 			return ReadString( Encoding.ASCII, stringLength );
 		}
 
+		/// <inheritdoc/>
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public string ReadStringUtf8( StringLength stringLength )
 		{
