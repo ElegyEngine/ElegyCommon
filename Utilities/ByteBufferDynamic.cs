@@ -24,16 +24,14 @@ namespace Elegy.Utilities
 
 		// TODO: One micro optimisation that could be done here is to write a
 		// custom List class which exposes its backing array, but read-only though.
-		private List<byte> mBytes = new();
-		private readonly int mInitialSize;
+		private byte[] mBytes = { };
 
 		/// <summary>
 		/// Initialises the byte buffer with an existing buffer of data.
 		/// </summary>
 		public ByteBufferDynamic( byte[] data )
 		{
-			mBytes = data.ToList();
-			mInitialSize = mBytes.Count;
+			mBytes = data;
 		}
 
 		/// <summary>
@@ -41,8 +39,7 @@ namespace Elegy.Utilities
 		/// </summary>
 		public ByteBufferDynamic( int size )
 		{
-			mBytes = new( size );
-			mInitialSize = size;
+			mBytes = new byte[size];
 		}
 
 		/// <inheritdoc/>
@@ -55,9 +52,10 @@ namespace Elegy.Utilities
 				throw new IndexOutOfRangeException( "Position < 0" );
 			}
 
-			if ( Position > mBytes.Count )
+			if ( Position >= mBytes.Length )
 			{
-				mBytes.EnsureCapacity( mBytes.Count + bytes );
+				// Expand by 1 MB
+				Array.Resize( ref mBytes, mBytes.Length + 1024 * 1024 );
 			}
 		}
 
@@ -70,8 +68,8 @@ namespace Elegy.Utilities
 		/// <inheritdoc/>
 		public void ResetData()
 		{
-			mBytes.Clear();
-			mBytes.EnsureCapacity( mInitialSize );
+			Unsafe.InitBlockUnaligned(
+				ref MemoryMarshal.GetReference( DataSpan ), 0, (uint)Data.Count );
 		}
 
 		#region Generic writing and reading
