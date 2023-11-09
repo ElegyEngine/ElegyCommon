@@ -27,6 +27,16 @@ namespace Elegy.Assets
 		public StringDictionary Parameters { get; set; } = new();
 
 		/// <summary>
+		/// Map compiler parameters.
+		/// </summary>
+		public StringDictionary ToolParameters { get; set; } = new();
+
+		/// <summary>
+		/// Map compiler flags.
+		/// </summary>
+		public ToolMaterialFlag ToolFlags { get; set; } = ToolMaterialFlag.None;
+
+		/// <summary>
 		/// Safely obtain a parameter string.
 		/// </summary>
 		public string? GetParameterString( string name )
@@ -50,7 +60,7 @@ namespace Elegy.Assets
 	/// </summary>
 	public class MaterialDocument
 	{
-		private void ParseMaterialParameters( Lexer lex, MaterialDefinition def )
+		private void ParseMaterialParameters( Lexer lex, StringDictionary parameters, ref ToolMaterialFlag flags )
 		{
 			if ( !lex.Expect( "{", true ) )
 			{
@@ -65,9 +75,13 @@ namespace Elegy.Assets
 				{
 					return;
 				}
+				else if ( Enum.IsDefined( typeof( ToolMaterialFlag ), token ) )
+				{
+					flags |= Enum.Parse<ToolMaterialFlag>( token );
+				}
 				else
 				{
-					def.Parameters.Add( token, lex.TokensBeforeNewline() );
+					parameters.Add( token, lex.TokensBeforeNewline() );
 				}
 			}
 		}
@@ -92,14 +106,25 @@ namespace Elegy.Assets
 			while ( !lex.IsEnd() )
 			{
 				token = lex.Next();
+				bool isMaterialTemplate = token == "materialTemplate";
+
 				if ( token == "}" )
 				{
 					break;
 				}
-				else if ( token == "materialTemplate" )
+				else if ( isMaterialTemplate || token == "compilerParams" )
 				{
-					materialDefinition.TemplateName = lex.Next();
-					ParseMaterialParameters( lex, materialDefinition );
+					materialDefinition.TemplateName = isMaterialTemplate ? lex.Next() : "ToolMaterial";
+					var toolFlags = materialDefinition.ToolFlags;
+					
+					ParseMaterialParameters(
+						lex,
+						isMaterialTemplate
+						? materialDefinition.Parameters
+						: materialDefinition.ToolParameters,
+						ref toolFlags );
+					
+					materialDefinition.ToolFlags = toolFlags;
 				}
 				else
 				{
