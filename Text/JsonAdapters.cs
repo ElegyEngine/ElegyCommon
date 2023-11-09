@@ -12,8 +12,11 @@ namespace Elegy.Text.JsonAdapters
 
 			reader.Read();
 			value.X = reader.GetSingle();
+			reader.Read();
 			value.Y = reader.GetSingle();
+			reader.Read();
 			value.Z = reader.GetSingle();
+			reader.Read();
 			value.W = reader.GetSingle();
 			reader.Read();
 
@@ -34,7 +37,9 @@ namespace Elegy.Text.JsonAdapters
 
 			reader.Read();
 			value.X = reader.GetSingle();
+			reader.Read();
 			value.Y = reader.GetSingle();
+			reader.Read();
 			value.Z = reader.GetSingle();
 			reader.Read();
 
@@ -55,6 +60,7 @@ namespace Elegy.Text.JsonAdapters
 
 			reader.Read();
 			value.X = reader.GetSingle();
+			reader.Read();
 			value.Y = reader.GetSingle();
 			reader.Read();
 
@@ -76,10 +82,15 @@ namespace Elegy.Text.JsonAdapters
 
 			reader.Read();
 			position.X = reader.GetSingle();
+			reader.Read();
 			position.Y = reader.GetSingle();
+			reader.Read();
 			position.Z = reader.GetSingle();
+			reader.Read();
 			size.X = reader.GetSingle();
+			reader.Read();
 			size.Y = reader.GetSingle();
+			reader.Read();
 			size.Z = reader.GetSingle();
 			reader.Read();
 
@@ -102,8 +113,11 @@ namespace Elegy.Text.JsonAdapters
 
 			reader.Read();
 			position.X = reader.GetSingle();
+			reader.Read();
 			position.Y = reader.GetSingle();
+			reader.Read();
 			size.X = reader.GetSingle();
+			reader.Read();
 			size.Y = reader.GetSingle();
 			reader.Read();
 
