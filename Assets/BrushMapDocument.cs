@@ -11,6 +11,28 @@ namespace Elegy.Assets
 	{
 		public const string Tag = "BrushMapDocument";
 
+		public void MergeInto( string parentClass, string mergedClass )
+		{
+			Entity? worldspawn = MapEntities.Find( e => e.ClassName == parentClass );
+			if ( worldspawn is null )
+			{
+				return;
+			}
+
+			for ( int i = 0; i < MapEntities.Count; i++ )
+			{
+				var entity = MapEntities[i];
+				if ( entity.ClassName == mergedClass )
+				{
+					worldspawn.Brushes.AddRange( entity.Brushes );
+					worldspawn.BoundingBox = worldspawn.BoundingBox.Merge( entity.BoundingBox );
+
+					MapEntities.Remove( entity );
+					i--;
+				}
+			}
+		}
+
 		public static Face ParseFace( Lexer lex )
 		{
 			// ( x1 y1 z1 ) ( x2 y2 z2 ) ( x3 y3 z3 ) texture_name [ ux uy uz offsetX ] [ vx vy vz offsetY ] rotation scaleX scaleY
